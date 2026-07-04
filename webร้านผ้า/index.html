@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ระบบแจ้งคิวงานปักชื่อและซ่อมผ้าร้านนิดา</title>
+    <link rel="stylesheet" href="main.css?v=2" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header>
+        <div class="brand">
+          <img class="logo-image" src="ร้านผ้า.png" alt="โลโก้ร้านนิดา" />
+          <div class="brand-info">
+            <h1>ระบบแจ้งคิวงานปักชื่อและซ่อมผ้าร้านนิดา</h1>
+            <p class="brand-subtitle">โทร. 0850655796</p>
+          </div>
+        </div>
+        <p>
+          ค้นหาคิวได้ด้วย <strong>คิว</strong>, <strong>ชื่อ</strong>, หรือ
+          <strong>เบอร์โทร</strong>
+        </p>
+        <div class="header-nav">
+          <a href="#">ค้นหาแบบทั่วไป</a>
+          <a href="#">ค้นหาตามหมวดอักษร</a>
+          <a href="#">สถิติการค้นหา</a>
+          <a href="#">คำแนะนำ</a>
+        </div>
+      </header>
+
+      <section class="search-panel">
+        <div class="search-input-row">
+          <div class="search-group">
+            <label for="searchInput">ค้นหา:</label>
+            <div class="search-field">
+              <span class="search-icon" aria-hidden="true">🔍</span>
+              <input
+                id="searchInput"
+                type="search"
+                placeholder="เช่น Em 1111, Rep 1111, นาซีฮะ, 0891234567"
+              />
+            </div>
+          </div>
+          <button id="searchBtn" class="secondary-btn search-btn">ค้นหา</button>
+        </div>
+        <div class="filter-group">
+          <button class="filter-btn active" data-type="all">ทั้งหมด</button>
+          <button class="filter-btn" data-type="Em">คิวปักชื่อ (Em)</button>
+          <button class="filter-btn" data-type="Rep">คิวซ่อม (Rep)</button>
+        </div>
+      </section>
+
+      <section class="table-section">
+        <h2>ตารางสถานะคิว</h2>
+        <div class="table-wrapper">
+          <table id="jobsTable">
+            <thead>
+              <tr>
+                <th>คิว</th>
+                <th>ประเภท</th>
+                <th>ชื่อ</th>
+                <th>เบอร์โทร</th>
+                <th>สถานะ</th>
+                <th>การจ่ายเงิน</th>
+                <th>ส่งงานแล้ว</th>
+                <th>จัดการ</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="admin-panel">
+        <div class="admin-header">
+          <h2>โหมดพนักงาน</h2>
+          <button id="staffToggle">เข้าสู่ระบบพนักงาน</button>
+        </div>
+
+        <div id="staffArea" class="staff-area hidden">
+          <div class="staff-controls">
+            <div class="form-row">
+              <label for="jobType">ประเภทงาน</label>
+              <select id="jobType">
+                <option value="Em">Em (ปักชื่อ)</option>
+                <option value="Rep">Rep (ซ่อมผ้า)</option>
+              </select>
+            </div>
+            <div class="form-row">
+              <label for="queueNumber">เลขคิว</label>
+              <input
+                id="queueNumber"
+                type="text"
+                placeholder="เช่น 1111 (เว้นว่างให้สร้างอัตโนมัติ)"
+              />
+            </div>
+            <div class="form-row">
+              <label for="customerName">ชื่อ</label>
+              <input id="customerName" type="text" placeholder="ชื่อผู้ใช้บริการ" />
+            </div>
+            <div class="form-row">
+              <label for="customerPhone">เบอร์โทร</label>
+              <input id="customerPhone" type="tel" placeholder="08xxxxxxxx" />
+            </div>
+            <div class="form-row">
+              <label for="statusSelect">สถานะ</label>
+              <select id="statusSelect"></select>
+            </div>
+            <div class="form-row">
+              <label for="paymentSelect">การจ่ายเงิน</label>
+              <select id="paymentSelect"></select>
+            </div>
+            <div class="form-row">
+              <label for="delivererName">ชื่อผู้ส่งงาน</label>
+              <input
+                id="delivererName"
+                type="text"
+                placeholder="ชื่อพนักงานที่ส่งงาน" 
+              />
+            </div>
+          </div>
+          <button id="addJobBtn" class="primary-btn">เพิ่มคิวงาน</button>
+        </div>
+      </section>
+
+      <section class="contact-panel">
+        <h2>ข้อมูลติดต่อร้านนิดา</h2>
+        <p>24/2 หมู่ 7 ต.หมอนทอง อ. บางน้ำเปรี้ยว จ. ฉะเชิงเทรา 24150</p>
+        <ul>
+          <li>FB : Ruwaida Daesa ส่วนตัว</li>
+          <li>เพจ FB : ร้านนิดา</li>
+          <li>เพจ FB : ปักป้ายชื่อ ปักอาร์ม ปักโลโก้ ปักสวย by Bang Mard</li>
+          <li>Line ID : 0850655896</li>
+        </ul>
+      </section>
+
+      <section class="notice-panel">
+        <div class="notice-card">
+          <h2>สถานะงาน</h2>
+          <ul>
+            <li>ยังไม่ได้ปัก</li>
+            <li>ปักแล้ว</li>
+            <li>ยังไม่ได้เย็บ</li>
+            <li>เย็บแล้ว</li>
+            <li>รอเลาะ</li>
+            <li>เลาะแล้ว</li>
+          </ul>
+        </div>
+        <div class="notice-card">
+          <h2>สถานะชำระเงิน</h2>
+          <ul>
+            <li>จ่ายแล้ว</li>
+            <li>จ่ายตอนรับ</li>
+          </ul>
+        </div>
+      </section>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>
+

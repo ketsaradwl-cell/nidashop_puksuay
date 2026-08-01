@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบแจ้งคิวงานปักชื่อและซ่อมผ้าร้านนิดา</title>
+    <!-- 🌐 ดึงฟอนต์ Prompt จาก Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="header">
+    <div class="header-top">
+        <div class="logo-circle">
+            <img src="logo.png" alt="โลโก้ร้านนิดา">
+        </div>
+        <div class="header-text">
+            <h2>ระบบแจ้งคิวงานปักชื่อและซ่อมผ้าร้านนิดา</h2>
+            <p>ตรวจสอบสถานะงานของคุณได้ง่ายๆ ตลอด 24 ชั่วโมง</p>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <div id="customerSection" class="card">
+        <h3 style="margin-top:0; text-align:center; color:#555;">🔍 ค้นหาคิวงานของคุณ</h3>
+        <input type="text" id="searchInput" class="search-box" placeholder="พิมพ์รหัสคิว ชื่อ หรือวันที่มาฝาก..." oninput="searchQueue()">
+        <div id="searchSuggestions" class="search-suggestions" style="display:none;"></div>
+
+        <div id="resultCard" class="result-card" style="display:none;">
+            <h3>รหัสคิว: <span id="resId" style="color:#3498db;"></span></h3>
+            <p><strong>👤 ชื่อลูกค้า:</strong> <span id="resName"></span></p>
+            <p><strong>📅 วันที่มาฝาก:</strong> <span id="resDate"></span></p>
+            <p><strong>👕 สถานะงาน:</strong> <span id="resStatus" class="status-badge"></span></p>
+            <p><strong>💰 การจ่ายเงิน:</strong> <span id="resPayment" class="payment-badge"></span></p>
+            <p><strong>📦 การส่งมอบงาน:</strong> <span id="resDelivery"></span></p>
+        </div>
+        <div id="noResult" style="margin-top:10px; color:red; font-weight:bold; display:none; text-align:center;">❌ ไม่พบข้อมูลคิวนี้</div>
+    </div>
+
+    <div id="adminSection" class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #e74c3c; padding-bottom:10px;">
+            <h2 style="margin:0; color:#e74c3c;">⚙️ โหมดจัดการหลังร้าน</h2>
+            <button onclick="logoutAdmin()" style="width:auto; background:#7f8c8d; color:white; border:none; padding:5px 10px; cursor:pointer;">ออกจากโหมดร้าน</button>
+        </div>
+        <h3>➕ เพิ่มคิวงานใหม่</h3>
+        <select id="jobType">
+            <option value="Em">งานปักเสื้อนักเรียน (Em)</option>
+            <option value="Rep">งานซ่อมผ้า (Rep)</option>
+        </select>
+        <input type="number" id="queueNumber" placeholder="เลขคิว (เช่น 1111)">
+        <input type="text" id="custName" placeholder="ชื่อลูกค้า">
+        <input type="date" id="custDate" placeholder="วัน/เดือน/ปี" inputmode="numeric">
+        <select id="jobStatus">
+            <option value="ยังไม่ได้ปัก">❌ ยังไม่ได้ปัก</option>
+            <option value="ปักแล้ว">🧵 ปักแล้ว</option>
+            <option value="รอเย็บ">🪡 รอเย็บ</option>
+            <option value="เย็บเรียบร้อยแล้ว">✨ เย็บเรียบร้อยแล้ว</option>
+            <option value="รอเลาะ">✂️ รอเลาะ</option>
+            <option value="เลาะแล้ว">🧹 เลาะแล้ว</option>
+        </select>
+
+        <select id="jobPayment">
+            <option value="ยังไม่ชำระเงิน">🔴 ยังไม่ชำระเงิน</option>
+            <option value="จ่ายเงินแล้ว">🟢 จ่ายเงินแล้ว</option>
+        </select>
+
+        <input type="text" id="jobDelivery" placeholder="คนส่งงาน / วิธีการรับงาน (เช่น มารับเอง)">
+        <button onclick="saveData()" style="margin-top: 10px; width: 100%;">บันทึกข้อมูล</button>
+
+        <h3>📋 รายการควบคุมสถานะ</h3>
+        <div style="overflow-x:auto;">
+            <table>
+                <thead>
+                    <tr><th>รหัสคิว</th><th>ชื่อลูกค้า</th><th>วันที่มาฝาก</th><th>สถานะ</th><th>การเงิน</th><th>คนส่งงาน</th><th>จัดการ</th></tr>
+                </thead>
+                <tbody id="adminTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="footer">
+    <div class="footer-content">
+        <div>
+            <h4 style="margin:0 0 10px 0; color:#3498db;">🏠 ที่อยู่หน้าร้าน</h4>
+            <p>ร้านนิดา 24/2 หมู่ 7 ต.หมอนทอง<br>อ. บางน้ำเปรี้ยว จ. ฉะเชิงเทรา 24150</p>
+        </div>
+       <div>
+            <h4 style="margin:0 0 10px 0; color:#3498db;">📞 ช่องทางการติดต่อ</h4>
+            <p style="margin: 3px 0;"><b>เพจ FB:</b> ร้านนิดา</p>
+            <p style="margin: 3px 0;"><b>เพจ FB:</b> ปักป้ายชื่อ ปักอาร์ม ปักโลโก้ ปักสวย by Bang Mard</p>
+            <p style="margin: 3px 0;"><b>FB ส่วนตัว:</b> Ruwaida Daesa</p>
+            <p style="margin: 3px 0;"><b>Line ID / โทร:</b> 0850655896</p>
+            
+            <div class="admin-button-wrap">
+                <button class="admin-login-btn" onclick="loginAdmin()">🔑เข้าระบบพนักงาน</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="passwordArea" class="password-modal" style="display: none;">
+    <div class="password-modal-box">
+        <button class="password-close-btn" type="button" onclick="closePasswordModal()">×</button>
+        <label style="display:block; margin-bottom:8px; font-weight:bold; color:#333;">🔐 กรุณากรอกรหัสผ่านสำหรับพนักงาน:</label>
+        <input type="password" id="adminPasswordInput" placeholder="กรอกรหัสผ่านตรงนี้" style="margin-bottom:10px; padding:10px; width:100%; border:1px solid #ccc; border-radius:4px; box-sizing:border-box;">
+        <button onclick="checkAdminPassword()" style="background: #2ecc71; color: white; padding: 10px; width: 100%; border:none; border-radius:4px; cursor:pointer; font-weight:bold;">ตกลง</button>
+    </div>
+</div>
+
+<script src="script.js?v=2"></script>
+</body>
+</html>

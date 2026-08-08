@@ -36,7 +36,8 @@
             <p><strong>📅 วันที่มาฝาก:</strong> <span id="resDate"></span></p>
             <p><strong>👕 สถานะงาน:</strong> <span id="resStatus" class="status-badge"></span></p>
             <p><strong>💰 การจ่ายเงิน:</strong> <span id="resPayment" class="payment-badge"></span></p>
-            <p><strong>📦 การส่งมอบงาน:</strong> <span id="resDelivery"></span></p>
+            <p><strong>📦 สถานะการส่งงาน:</strong> <span id="resDelivery"></span></p>
+            <p><strong>👩‍🔧 ชื่อพนักงาน:</strong> <span id="resEmployee"></span></p>
         </div>
         <div id="noResult" style="margin-top:10px; color:red; font-weight:bold; display:none; text-align:center;">❌ ไม่พบข้อมูลคิวนี้</div>
     </div>
@@ -51,7 +52,7 @@
             <option value="Em">งานปักเสื้อนักเรียน (Em)</option>
             <option value="Rep">งานซ่อมผ้า (Rep)</option>
         </select>
-        <input type="number" id="queueNumber" placeholder="เลขคิว (เช่น 1111)">
+        <input type="text" id="queueNumber" placeholder="เลขคิวจะสร้างจากวันที่ที่เลือก" readonly>
         <input type="text" id="custName" placeholder="ชื่อลูกค้า">
         <input type="date" id="custDate" placeholder="วัน/เดือน/ปี" inputmode="numeric">
         <select id="jobStatus">
@@ -68,14 +69,31 @@
             <option value="จ่ายเงินแล้ว">🟢 จ่ายเงินแล้ว</option>
         </select>
 
-        <input type="text" id="jobDelivery" placeholder="คนส่งงาน / วิธีการรับงาน (เช่น มารับเอง)">
+        <div class="inline-fields">
+            <select id="jobDelivery">
+                <option value="ยังไม่ส่ง">❌ ยังไม่ส่ง</option>
+                <option value="ส่งแล้ว">✅ ส่งแล้ว</option>
+            </select>
+            <select id="employeeName" onchange="handleEmployeeChange()">
+                <option value="">-- เลือกพนักงาน --</option>
+                <option value="อัสมี่">อัสมี่</option>
+                <option value="ฮุสนา">ฮุสนา</option>
+                <option value="นูรนา">นูรนา</option>
+                <option value="ฮาน่า">ฮาน่า</option>
+                <option value="ยาซีมีน">ยาซีมีน</option>
+                <option value="นาซีฮะ">นาซีฮะ</option>
+                <option value="วิมันตรา">วิมันตรา</option>
+                <option value="custom">⊕ อื่น (ระบุชื่อเอง)</option>
+            </select>
+        </div>
+        <input type="text" id="customEmployeeName" placeholder="พิมพ์ชื่อพนักงานใหม่" style="display:none;">
         <button onclick="saveData()" style="margin-top: 10px; width: 100%;">บันทึกข้อมูล</button>
 
         <h3>📋 รายการควบคุมสถานะ</h3>
         <div style="overflow-x:auto;">
             <table>
                 <thead>
-                    <tr><th>รหัสคิว</th><th>ชื่อลูกค้า</th><th>วันที่มาฝาก</th><th>สถานะ</th><th>การเงิน</th><th>คนส่งงาน</th><th>จัดการ</th></tr>
+                    <tr><th>รหัสคิว</th><th>ชื่อลูกค้า</th><th>วันที่มาฝาก</th><th>สถานะ</th><th>การเงิน</th><th>สถานะการส่งงาน</th><th>ชื่อพนักงาน</th><th>จัดการ</th></tr>
                 </thead>
                 <tbody id="adminTableBody"></tbody>
             </table>

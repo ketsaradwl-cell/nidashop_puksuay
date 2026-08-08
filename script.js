@@ -4,6 +4,7 @@ const SUPABASE_KEY = "sb_publishable_kZ_g9Q2yA_DbNvOHBYTIsQ_1C0djXgv";
 const DEPOSIT_DATE_FIELD = 'deposit_date';
 let searchDebounceTimer = null;
 let activeSearchRequestId = 0;
+let queueCatalogCache = [];
 
 function normalizeDateToISO(value) {
     const trimmed = value.trim();
@@ -50,6 +51,94 @@ function formatISODateForDisplay(value) {
     return `${day}/${month}/${year}`;
 }
 
+function getJobTypePrefix(jobType) {
+    return jobType === 'Rep' ? 'Rep' : 'Em';
+}
+
+function buildQueueId(jobType, queueNumber) {
+    const prefix = getJobTypePrefix(jobType);
+    return `${prefix} ${String(queueNumber)}`;
+}
+
+function parseQueueNumber(queueId) {
+    if (!queueId) return null;
+    const trimmed = String(queueId).trim();
+    const match = trimmed.match(/^(Em|Rep)\s+(\d+)$/i);
+    if (match) {
+        return Number(match[2]);
+    }
+
+    const numericMatch = trimmed.match(/^(\d+)$/);
+    if (numericMatch) {
+        return Number(numericMatch[1]);
+    }
+
+    return null;
+}
+
+function getNextQueueNumber(items, jobType) {
+    const prefix = getJobTypePrefix(jobType).toUpperCase();
+    let highest = 0;
+
+    (items || []).forEach((item) => {
+        const queueId = item?.queue_id;
+        if (!queueId) return;
+
+        const parsed = parseQueueNumber(queueId);
+        if (parsed === null) return;
+
+        const queuePrefix = String(queueId).trim().split(/\s+/)[0]?.toUpperCase();
+        if (queuePrefix && queuePrefix !== prefix) return;
+
+        if (parsed > highest) {
+            highest = parsed;
+        }
+    });
+
+    return highest + 1;
+}
+
+async function refreshQueueNumberField() {
+    const queueInput = document.getElementById('queueNumber');
+    const jobTypeSelect = document.getElementById('jobType');
+    if (!queueInput || !jobTypeSelect) return;
+
+    const jobType = jobTypeSelect.value;
+
+    try {
+        const response = await fetch(`${SUPABASE_URL}/rest/v1/nidashop_puksuay?select=queue_id`, {
+            method: 'GET',
+            headers: {
+                'apikey': SUPABASE_KEY,
+                'Authorization': `Bearer ${SUPABASE_KEY}`
+            }
+        });
+
+        const data = await response.json();
+        queueCatalogCache = Array.isArray(data) ? data : [];
+    } catch (error) {
+        console.error('Failed to refresh queue number:', error);
+        queueCatalogCache = [];
+    }
+
+    const nextQueueNumber = getNextQueueNumber(queueCatalogCache, jobType);
+    queueInput.value = buildQueueId(jobType, nextQueueNumber);
+    queueInput.readOnly = true;
+}
+
+function handleEmployeeChange() {
+    const employeeSelect = document.getElementById('employeeName');
+    const customInput = document.getElementById('customEmployeeName');
+    
+    if (employeeSelect.value === 'custom') {
+        customInput.style.display = 'block';
+        customInput.focus();
+    } else {
+        customInput.style.display = 'none';
+        customInput.value = '';
+    }
+}
+
 async function saveData() {
     await addNewQueue();
 }
@@ -74,6 +163,7 @@ function displayQueueResult(item) {
     document.getElementById('resName').innerText = item.customer_name || '-';
     document.getElementById('resDate').innerText = formatISODateForDisplay(item[DEPOSIT_DATE_FIELD]) || '-';
     document.getElementById('resDelivery').innerText = item.delivery || '-';
+    document.getElementById('resEmployee').innerText = item.employee_name || '-';
 
     statusSpan.innerText = item.status || '-';
     statusSpan.className = 'status-badge ' + getStatusClass(item.status);
@@ -225,7 +315,6 @@ function getPaymentClass(payment) {
 // // ฟังก์ชันสำหรับแอดมินหลังบ้านเพิ่มคิวงานใหม่ (เวอร์ชันดึงค่าสถานะตามที่แอดมินเลือกจริง)
 async function addNewQueue() {
     const jobType = document.getElementById('jobType').value;
-    const queueNumber = document.getElementById('queueNumber').value;
     const custName = document.getElementById('custName').value;
     const custDate = document.getElementById('custDate').value;
     const depositDate = normalizeDateToISO(custDate);
@@ -233,14 +322,17 @@ async function addNewQueue() {
     // 💡 จุดที่เพิ่มเข้ามาใหม่: ดึงค่าสถานะต่างๆ จาก index.html
     const jobStatus = document.getElementById('jobStatus').value;
     const jobPayment = document.getElementById('jobPayment').value;
-   // ✅ แก้ไขให้เป็น 'jobDelivery' (ตรงกับไอดีใน index.html)
-    const jobDelivery = document.getElementById('jobDelivery').value.trim() || "รอดำเนินการ";
-    if (!queueNumber || !custName || !depositDate) {
-        alert('กรุณากรอกเลขคิว ชื่อลูกค้า และวันที่มาฝากด้วยครับ');
+    const jobDelivery = document.getElementById('jobDelivery').value || 'ยังไม่ส่ง';
+    const employeeSelect = document.getElementById('employeeName');
+    const customEmployeeInput = document.getElementById('customEmployeeName');
+    let employeeName = employeeSelect.value === 'custom' ? customEmployeeInput.value.trim() : employeeSelect.value;
+    
+    if (!custName || !depositDate) {
+        alert('กรุณากรอกชื่อลูกค้าและวันที่มาฝากด้วยครับ');
         return;
     }
 
-    const fullQueueId = `${jobType} ${queueNumber}`;
+    const fullQueueId = buildQueueId(jobType, getNextQueueNumber(queueCatalogCache, jobType));
 
     const newOrder = {
         queue_id: fullQueueId,
@@ -248,7 +340,8 @@ async function addNewQueue() {
         [DEPOSIT_DATE_FIELD]: depositDate,
         status: jobStatus,      // ใช้ค่าตามที่แอดมินเลือก
         payment: jobPayment,    // ใช้ค่าตามที่แอดมินเลือก
-        delivery: jobDelivery,  // ใช้ค่าตามที่แอดมินพิมพ์
+        delivery: jobDelivery,
+        employee_name: employeeName,
         created_at: new Date().toISOString()
     };
 
@@ -277,10 +370,15 @@ async function addNewQueue() {
 
         if (response.ok) {
             alert('💾 บันทึกข้อมูลคิวใหม่ลงฐานข้อมูล Supabase เรียบร้อยแล้ว!');
-            document.getElementById('queueNumber').value = '';
+            queueCatalogCache = [...queueCatalogCache, { queue_id: fullQueueId }];
+            const queueInput = document.getElementById('queueNumber');
+            if (queueInput) {
+                queueInput.value = buildQueueId(jobType, getNextQueueNumber(queueCatalogCache, jobType));
+            }
             document.getElementById('custName').value = '';
             document.getElementById('custDate').value = '';
-            document.getElementById('jobDelivery').value = ''; 
+            document.getElementById('jobDelivery').value = 'ยังไม่ส่ง';
+            document.getElementById('employeeName').value = '';
             loadAdminTable(); // อัปเดตตารางหลังบ้าน
         } else {
             console.error('Supabase insert failed:', response.status, errorDetail);
@@ -340,7 +438,8 @@ async function loadAdminTable() {
             <td>${formatISODateForDisplay(item[DEPOSIT_DATE_FIELD]) || '-'}</td>
             <td><span class="status-badge">${item.status}</span></td>
             <td>${item.payment}</td>
-            <td>${item.delivery}</td>
+            <td>${item.delivery || '-'}</td>
+            <td>${item.employee_name || '-'}</td>
             <td><button class="delete-btn" onclick="deleteQueue(${item.id})">ลบ</button></td>
         `;
         tbody.appendChild(tr);
@@ -358,6 +457,15 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+
+    const jobTypeSelect = document.getElementById('jobType');
+    if (jobTypeSelect) {
+        jobTypeSelect.addEventListener('change', () => {
+            refreshQueueNumberField();
+        });
+    }
+
+    refreshQueueNumberField();
 });
 
 // ✅ แก้ไขให้ .style มีแค่อันเดียวเรียบร้อยแล้ว

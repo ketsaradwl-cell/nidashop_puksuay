@@ -219,6 +219,15 @@ input, select, button {
     border-radius: 8px; 
     font-size: 13px;
 }
+.inline-fields {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+.inline-fields > * {
+    flex: 1;
+    min-width: 0;
+}
 button.btn-save { 
     background: #27ae60; 
     color: white; 

@@ -163,6 +163,7 @@ function displayQueueResult(item) {
     document.getElementById('resName').innerText = item.customer_name || '-';
     document.getElementById('resDate').innerText = formatISODateForDisplay(item[DEPOSIT_DATE_FIELD]) || '-';
     document.getElementById('resDelivery').innerText = item.delivery || '-';
+    document.getElementById('resDelivery').className = 'delivery-badge ' + getDeliveryClass(item.delivery);
     document.getElementById('resEmployee').innerText = item.employee_name || '-';
 
     statusSpan.innerText = item.status || '-';
@@ -312,6 +313,16 @@ function getPaymentClass(payment) {
     return 'payment-unpaid';
 }
 
+function getDeliveryClass(delivery) {
+    if (!delivery) return 'delivery-pending';
+
+    const normalized = String(delivery).trim().toLowerCase();
+    if (normalized === 'ส่งแล้ว' || normalized === 'ส่งเรียบร้อยแล้ว') {
+        return 'delivery-sent';
+    }
+    return 'delivery-pending';
+}
+
 // // ฟังก์ชันสำหรับแอดมินหลังบ้านเพิ่มคิวงานใหม่ (เวอร์ชันดึงค่าสถานะตามที่แอดมินเลือกจริง)
 async function addNewQueue() {
     const jobType = document.getElementById('jobType').value;
@@ -438,7 +449,7 @@ async function loadAdminTable() {
             <td>${formatISODateForDisplay(item[DEPOSIT_DATE_FIELD]) || '-'}</td>
             <td><span class="status-badge">${item.status}</span></td>
             <td>${item.payment}</td>
-            <td>${item.delivery || '-'}</td>
+            <td><span class="delivery-badge ${getDeliveryClass(item.delivery)}">${item.delivery || '-'}</span></td>
             <td>${item.employee_name || '-'}</td>
             <td><button class="delete-btn" onclick="deleteQueue(${item.id})">ลบ</button></td>
         `;

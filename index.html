@@ -54,7 +54,13 @@
         </select>
         <input type="text" id="queueNumber" placeholder="เลขคิวจะสร้างจากวันที่ที่เลือก" readonly>
         <input type="text" id="custName" placeholder="ชื่อลูกค้า">
-        <input type="date" id="custDate" placeholder="วัน/เดือน/ปี" inputmode="numeric">
+        <div class="date-field">
+            <label for="custDate">📅 วันที่มาฝาก</label>
+            <div class="date-input-wrap">
+                <input type="date" id="custDate" class="date-input" placeholder="วัน/เดือน/ปี (แตะเพื่อเลือกวันที่)" aria-label="วันที่มาฝาก">
+                <span class="date-icon" aria-hidden="true">📅</span>
+            </div>
+        </div>
         <select id="jobStatus">
             <option value="ยังไม่ได้ปัก">❌ ยังไม่ได้ปัก</option>
             <option value="ปักแล้ว">🧵 ปักแล้ว</option>
@@ -130,6 +136,6 @@
     </div>
 </div>
 
-<script src="script.js?v=2"></script>
+<script src="script.js?v=7"></script>
 </body>
 </html>

@@ -61,6 +61,19 @@ function buildQueueId(jobType, queueNumber) {
     return `${prefix} ${String(queueNumber)}`;
 }
 
+function normalizeQueueSearch(value) {
+    const compactValue = String(value || '').trim().replace(/\s+/g, '').toLowerCase();
+    const match = compactValue.match(/^(em|rep|rap)(\d+)$/);
+    if (!match) return null;
+
+    const prefix = match[1] === 'em' ? 'em' : 'rep';
+    return `${prefix}${Number(match[2])}`;
+}
+
+function getNormalizedQueueId(queueId) {
+    return normalizeQueueSearch(queueId);
+}
+
 function parseQueueNumber(queueId) {
     if (!queueId) return null;
     const trimmed = String(queueId).trim();
@@ -233,7 +246,12 @@ function renderSearchSuggestions(matches) {
 
         button.appendChild(mainText);
         button.appendChild(subText);
-        button.addEventListener('click', () => displayQueueResult(item));
+        button.addEventListener('click', () => {
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput) searchInput.value = item.queue_id || '';
+            clearSearchSuggestions();
+            displayQueueResult(item);
+        });
         suggestions.appendChild(button);
     });
 
@@ -274,16 +292,20 @@ async function searchQueue() {
             }
 
             const normalizedInput = currentInput.toLowerCase();
+            const normalizedQueueInput = normalizeQueueSearch(currentInput);
             const normalizedDate = normalizeDateToISO(currentInput);
 
             const matches = (data || []).filter((item) => {
                 const queueId = String(item.queue_id || '').toLowerCase();
+                const normalizedQueueId = getNormalizedQueueId(item.queue_id);
                 const customerName = String(item.customer_name || '').toLowerCase();
                 const depositValue = String(item[DEPOSIT_DATE_FIELD] || '').toLowerCase();
                 const displayDate = formatISODateForDisplay(item[DEPOSIT_DATE_FIELD]).toLowerCase();
 
-                return queueId.includes(normalizedInput) ||
-                    customerName.includes(normalizedInput) ||
+                return (normalizedQueueInput
+                    ? normalizedQueueId === normalizedQueueInput
+                    : queueId.includes(normalizedInput)) ||
+                    customerName.startsWith(normalizedInput) ||
                     displayDate.includes(normalizedInput) ||
                     depositValue.includes(normalizedInput) ||
                     (normalizedDate && depositValue === normalizedDate);
@@ -842,6 +864,55 @@ async function updateQueue(id, updates, expectedField, expectedValue) {
             }
         }
 
+// แสดง debug panel บนหน้า adminSection
+function showDebugPanel(info) {
+    const adminSection = document.getElementById('adminSection');
+    if (!adminSection) return;
+    let panel = document.getElementById('adminDebugPanel');
+    if (!panel) {
+        panel = document.createElement('div');
+        panel.id = 'adminDebugPanel';
+        panel.innerHTML = '<button id="adminDebugClose">×</button><div id="adminDebugContent"></div>';
+        adminSection.style.position = 'relative';
+        adminSection.appendChild(panel);
+        document.getElementById('adminDebugClose').addEventListener('click', () => panel.remove());
+    }
+    const content = document.getElementById('adminDebugContent');
+    if (!content) return;
+    const time = new Date().toLocaleTimeString();
+    if (info.stage === 'request') {
+        content.innerText = `[${time}] REQUEST\nURL: ${info.url}\nBODY: ${JSON.stringify(info.body)}\n`;
+    } else if (info.stage === 'response') {
+        content.innerText = `[${time}] RESPONSE\nURL: ${info.url}\nSTATUS: ${info.status}\nBODY: ${JSON.stringify(info.body)}\n`;
+    } else if (info.stage === 'error') {
+        content.innerText = `[${time}] ERROR\n${info.error}`;
+    }
+}
+
+// แสดงข้อความสถานะเล็ก ๆ ในหน้าจอแอดมิน
+function showAdminMessage(message, isSuccess) {
+    let container = document.getElementById('adminMessage');
+    if (!container) {
+        const adminSection = document.getElementById('adminSection');
+        if (!adminSection) return;
+
+        container = document.createElement('div');
+        container.id = 'adminMessage';
+        container.style.position = 'absolute';
+        container.style.right = '18px';
+        container.style.top = '12px';
+        container.style.zIndex = 3000;
+        adminSection.style.position = 'relative';
+        adminSection.appendChild(container);
+    }
+    container.innerText = message;
+    container.style.padding = '8px 12px';
+    container.style.borderRadius = '8px';
+    container.style.color = '#fff';
+    container.style.background = isSuccess ? 'rgba(39, 174, 96, 0.95)' : 'rgba(231, 76, 60, 0.95)';
+    setTimeout(() => { if (container) container.innerText = ''; }, 2500);
+}
+
         // Try update by numeric id first
         let urlById = `${SUPABASE_URL}/rest/v1/nidashop_puksuay?id=eq.${encodeURIComponent(recordId)}`;
         console.log('Request URL (by id):', urlById);
@@ -915,54 +986,6 @@ async function updateQueue(id, updates, expectedField, expectedValue) {
         showAdminMessage('เกิดข้อผิดพลาดขณะอัปเดตข้อมูล', false);
         return { ok: false, error: err };
     }
-}
-
-// แสดง debug panel บนหน้า adminSection
-function showDebugPanel(info) {
-    const adminSection = document.getElementById('adminSection');
-    if (!adminSection) return;
-    let panel = document.getElementById('adminDebugPanel');
-    if (!panel) {
-        panel = document.createElement('div');
-        panel.id = 'adminDebugPanel';
-        panel.innerHTML = '<button id="adminDebugClose">×</button><div id="adminDebugContent"></div>';
-        adminSection.style.position = 'relative';
-        adminSection.appendChild(panel);
-        document.getElementById('adminDebugClose').addEventListener('click', () => panel.remove());
-    }
-    const content = document.getElementById('adminDebugContent');
-    if (!content) return;
-    const time = new Date().toLocaleTimeString();
-    if (info.stage === 'request') {
-        content.innerText = `[${time}] REQUEST\nURL: ${info.url}\nBODY: ${JSON.stringify(info.body)}\n`;
-    } else if (info.stage === 'response') {
-        content.innerText = `[${time}] RESPONSE\nURL: ${info.url}\nSTATUS: ${info.status}\nBODY: ${JSON.stringify(info.body)}\n`;
-    } else if (info.stage === 'error') {
-        content.innerText = `[${time}] ERROR\n${info.error}`;
-    }
-}
-
-// แสดงข้อความสถานะเล็ก ๆ ในหน้าจอแอดมิน
-function showAdminMessage(message, isSuccess) {
-    let container = document.getElementById('adminMessage');
-    if (!container) {
-        const adminSection = document.getElementById('adminSection');
-        if (!adminSection) return;
-        container = document.createElement('div');
-        container.id = 'adminMessage';
-        container.style.position = 'absolute';
-        container.style.right = '18px';
-        container.style.top = '12px';
-        container.style.zIndex = 3000;
-        adminSection.style.position = 'relative';
-        adminSection.appendChild(container);
-    }
-    container.innerText = message;
-    container.style.padding = '8px 12px';
-    container.style.borderRadius = '8px';
-    container.style.color = '#fff';
-    container.style.background = isSuccess ? 'rgba(39, 174, 96, 0.95)' : 'rgba(231, 76, 60, 0.95)';
-    setTimeout(() => { if (container) container.innerText = ''; }, 2500);
 }
 
 function updateQueueField(id, field, value) {

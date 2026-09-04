@@ -1,4 +1,3 @@
-// 🔌 นำ URL และ Key จากหน้า Supabase มาใส่วางในเครื่องหมายคำพูดตามนี้เลยครับ
 const SUPABASE_URL = "https://xviotthylkwyiiwrhoxd.supabase.co";
 const SUPABASE_KEY = "sb_publishable_kZ_g9Q2yA_DbNvOHBYTIsQ_1C0djXgv";
 const DEPOSIT_DATE_FIELD = 'deposit_date';

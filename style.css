@@ -70,9 +70,9 @@ body {
 }
 
 .container { 
-    max-width: 580px; 
-    width: 100%; 
-    margin: 20px auto; 
+    width: min(100%, 580px);
+    max-width: 580px;
+    margin: 20px auto;
     padding: 0 16px; 
     flex: 1; 
     background: transparent;
@@ -112,8 +112,9 @@ body {
     margin: 0;
 }
 .search-controls {
+    width: 100%;
     max-width: 520px;
-    margin: 0 auto;
+    margin-inline: auto;
     display: flex;
     align-items: center;
     gap: 8px;

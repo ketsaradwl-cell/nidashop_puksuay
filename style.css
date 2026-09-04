@@ -87,6 +87,12 @@ body {
     margin-bottom: 12px; 
 }
 
+#customerSection {
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+}
+
 .search-heading {
     margin-top: 0;
     text-align: center;
@@ -118,6 +124,21 @@ body {
     display: flex;
     align-items: center;
     gap: 8px;
+}
+
+@media (min-width: 651px) and (max-width: 1100px) {
+    .container {
+        width: 100%;
+        max-width: 640px;
+        padding-left: 20px;
+        padding-right: 20px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    #customerSection {
+        width: 100%;
+    }
 }
 .search-button {
     flex: 0 0 auto;

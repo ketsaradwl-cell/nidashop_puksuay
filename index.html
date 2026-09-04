@@ -26,8 +26,11 @@
 
 <div class="container">
     <div id="customerSection" class="card">
-        <h3 style="margin-top:0; text-align:center; color:#555;">🔍 ค้นหาคิวงานของคุณ</h3>
-        <input type="text" id="searchInput" class="search-box" placeholder="พิมพ์รหัสคิว ชื่อ หรือวันที่มาฝาก..." oninput="searchQueue()">
+        <h3 class="search-heading"><span aria-hidden="true">🔍</span> ค้นหาคิวงานของคุณ</h3>
+        <div class="search-controls">
+            <input type="text" id="searchInput" class="search-box" placeholder="พิมพ์รหัสคิว ชื่อ หรือวันที่มาฝาก...">
+            <button type="button" id="searchButton" class="search-button" onclick="searchQueue()" aria-label="ค้นหาคิวงาน" title="ค้นหาคิวงาน">ค้นหา</button>
+        </div>
         <div id="searchSuggestions" class="search-suggestions" style="display:none;"></div>
 
         <div id="resultCard" class="result-card" style="display:none;">

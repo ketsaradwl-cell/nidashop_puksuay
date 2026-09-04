@@ -1017,6 +1017,16 @@ function updateEmployeeFromInput(id) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) {
+        searchInput.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                searchQueue();
+            }
+        });
+    }
+
     const passwordInput = document.getElementById('adminPasswordInput');
     if (passwordInput) {
         passwordInput.addEventListener('keydown', (event) => {

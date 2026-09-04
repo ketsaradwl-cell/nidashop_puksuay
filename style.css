@@ -138,6 +138,11 @@ body {
 
     #customerSection {
         width: 100%;
+        margin-top: 110px;
+    }
+
+    .search-controls {
+        max-width: 460px;
     }
 }
 .search-button {

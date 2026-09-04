@@ -1019,6 +1019,14 @@ function updateEmployeeFromInput(id) {
 document.addEventListener('DOMContentLoaded', () => {
     const searchInput = document.getElementById('searchInput');
     if (searchInput) {
+        searchInput.addEventListener('input', () => {
+            clearTimeout(searchDebounceTimer);
+            activeSearchRequestId += 1;
+            clearSearchSuggestions();
+            document.getElementById('resultCard').style.display = 'none';
+            document.getElementById('noResult').style.display = 'none';
+        });
+
         searchInput.addEventListener('keydown', (event) => {
             if (event.key === 'Enter') {
                 event.preventDefault();

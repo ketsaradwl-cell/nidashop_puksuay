@@ -91,7 +91,7 @@ function parseQueueNumber(queueId) {
 
 function getNextQueueNumber(items, jobType) {
     const prefix = getJobTypePrefix(jobType).toUpperCase();
-    const usedNumbers = new Set();
+    let highestNumber = 0;
 
     (items || []).forEach((item) => {
         const queueId = item?.queue_id;
@@ -103,14 +103,10 @@ function getNextQueueNumber(items, jobType) {
         const queuePrefix = String(queueId).trim().split(/\s+/)[0]?.toUpperCase();
         if (queuePrefix && queuePrefix !== prefix) return;
 
-        usedNumbers.add(parsed);
+        highestNumber = Math.max(highestNumber, parsed);
     });
 
-    let nextNumber = 1;
-    while (usedNumbers.has(nextNumber)) {
-        nextNumber += 1;
-    }
-    return nextNumber;
+    return highestNumber + 1;
 }
 
 async function refreshQueueNumberField() {
@@ -276,6 +272,8 @@ async function searchQueue() {
     clearTimeout(searchDebounceTimer);
     searchDebounceTimer = setTimeout(async () => {
         try {
+            await deleteExpiredQueues();
+
             const response = await fetch(`${SUPABASE_URL}/rest/v1/nidashop_puksuay?select=*`, {
                 method: 'GET',
                 headers: {
@@ -493,12 +491,13 @@ async function deleteQueue(id) {
 }
 
 // ลบงานที่เพิ่มเข้ามาเกินจำนวนวันที่กำหนด
-async function deleteExpiredQueues() {
+async function deleteExpiredQueues(showMessage = false) {
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - AUTO_DELETE_AFTER_DAYS);
+    cutoffDate.setHours(0, 0, 0, 0);
 
     try {
-        const response = await fetch(`${SUPABASE_URL}/rest/v1/nidashop_puksuay?select=id,queue_id,created_at`, {
+        const response = await fetch(`${SUPABASE_URL}/rest/v1/nidashop_puksuay?select=id,queue_id,deposit_date,created_at`, {
             method: 'GET',
             headers: {
                 'apikey': SUPABASE_KEY,
@@ -509,7 +508,10 @@ async function deleteExpiredQueues() {
         if (!response.ok) return;
         const data = await response.json();
         const expiredItems = (data || []).filter((item) => {
-            return item.created_at && new Date(item.created_at) < cutoffDate;
+            const dateValue = item[DEPOSIT_DATE_FIELD]
+                ? new Date(`${item[DEPOSIT_DATE_FIELD]}T00:00:00`)
+                : new Date(item.created_at);
+            return !Number.isNaN(dateValue.getTime()) && dateValue <= cutoffDate;
         });
 
         let deletedCount = 0;
@@ -527,7 +529,7 @@ async function deleteExpiredQueues() {
             if (deleteResponse.ok) deletedCount += 1;
         }
 
-        if (deletedCount > 0) {
+        if (showMessage && deletedCount > 0) {
             showAdminMessage(`ลบงานที่เกิน ${AUTO_DELETE_AFTER_DAYS} วันแล้ว ${deletedCount} รายการ`, true);
         }
     } catch (error) {
@@ -537,7 +539,7 @@ async function deleteExpiredQueues() {
 
 // ฟังก์ชันดึงคิวงานทั้งหมดมาโชว์ในตารางแอดมิน
 async function loadAdminTable() {
-    await deleteExpiredQueues();
+    await deleteExpiredQueues(true);
     const response = await fetch(`${SUPABASE_URL}/rest/v1/nidashop_puksuay?order=created_at.desc`, {
         method: 'GET',
         headers: {
@@ -1053,6 +1055,7 @@ document.addEventListener('DOMContentLoaded', () => {
         updateJobStatusOptions();
     }
 
+    deleteExpiredQueues();
     refreshQueueNumberField();
 });
 

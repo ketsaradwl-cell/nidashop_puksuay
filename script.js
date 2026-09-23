@@ -1110,6 +1110,7 @@ function checkAdminPassword() {
         document.getElementById('passwordArea').style.display = 'none'; // ซ่อนกล่องรหัส
         document.getElementById('adminPasswordInput').value = ''; // ล้างรหัสที่พิมพ์ค้างไว้
         document.getElementById('adminSection').style.display = 'block'; // เปิดหลังร้าน
+        document.getElementById('customerSection').style.display = 'none'; // ซ่อนกล่องค้นหาคิว
         loadAdminTable();
     } else {
         alert("❌ รหัสผ่านไม่ถูกต้อง! ไม่สามารถเข้าสู่ระบบได้");
@@ -1118,6 +1119,7 @@ function checkAdminPassword() {
 
 function logoutAdmin() {
     document.getElementById('adminSection').style.display = 'none';
+    document.getElementById('customerSection').style.display = 'block';
     const passArea = document.getElementById('passwordArea');
     if (passArea) passArea.style.display = 'none';
 }
